@@ -71,3 +71,9 @@ void InputHandler::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, in
 }
 
 
+bool InputHandler::IsOrtho() const
+{
+	return isOrtho;
+}
+
+

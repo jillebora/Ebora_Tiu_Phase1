@@ -14,6 +14,8 @@ class InputHandler
 
 		float CameraSpeed = 60.f;
 
+		bool IsOrtho() const;
+
 	private:
 		//Key handler
 		void OnKey(GLFWwindow* window, int key, int action);
@@ -30,11 +32,6 @@ class InputHandler
 
 		// Projection mode: true (1 key) = ortho, false = persp 
 		bool isOrtho = true;
-		
-		bool IsOrtho() const
-		{
-			return isOrtho;
-		}
 
 		bool spacePressed = false;
 

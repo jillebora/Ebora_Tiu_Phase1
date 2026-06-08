@@ -98,7 +98,7 @@ int main()
 	glm::mat4 perspProj = glm::perspective(glm::radians(45.f), windowWidth / windowHeight, 1.f, 2000.f);
 
 	glm::mat4 proj = orthoProj;
-	glm::mat4 view = glm::mat4(1.f);;
+	glm::mat4 view = glm::mat4(1.f);
 
 	// ---- Camera orbit state ------------------------------------------------
 	float camYaw = 0.f;

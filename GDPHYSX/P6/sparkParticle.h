@@ -25,6 +25,7 @@ class SparkParticle : public P6::Particle
 
 		void Spawn(const glm::vec3& origin)
 		{
+			float spread = randomFloat(0.f, 0.3f);
 			isDestroyed = false; 
 
 			lifespan = randomFloat(1.f, 10.f);
@@ -39,9 +40,9 @@ class SparkParticle : public P6::Particle
 			StartPosition = origin;
 
 			// Particle random launch velocity
-			float vx = randomFloat(-15.f, 15.f);
-			float vy = randomFloat(120.f, 180.f);
-			float vz = randomFloat(-15.f, 15.f);
+			float vy = randomFloat(80.f, 120.f);
+			float vx = randomFloat(-1.f, 1.f) * vy * spread;
+			float vz = randomFloat(-1.f, 1.f) * vy * spread;
 			Velocity = glm::vec3(vx, vy, vz);
 
 			accumulatedForce = glm::vec3(0.f);
