@@ -127,6 +127,7 @@ void Model::setRotation(const glm::vec3& rot)
 void Model::setScale(const glm::vec3& scl)
 {
     scale = scl;
+	renderObj.baseScale = scl; // Update the RenderObject's base scale as well
 }
 
 

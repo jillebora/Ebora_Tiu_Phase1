@@ -42,6 +42,12 @@
     <ClCompile Include="physicsWorld.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="forceGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tiny_obj_loader.h">
@@ -69,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="physicsWorld.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
