@@ -39,7 +39,7 @@ namespace P6
 
 			bool IsDestroyed();
 
-			void Update(float deltaTime);
+			virtual void Update(float deltaTime);
 
 			static glm::vec3 makeVec(float scalar, glm::vec3 start, glm::vec3 target = glm::vec3(0.f))
 			{
