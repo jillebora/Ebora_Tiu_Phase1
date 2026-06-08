@@ -31,6 +31,11 @@ class InputHandler
 		// Projection mode: true (1 key) = ortho, false = persp 
 		bool isOrtho = true;
 		
+		bool IsOrtho() const
+		{
+			return isOrtho;
+		}
+
 		bool spacePressed = false;
 
 		GLFWwindow* windowHandle = nullptr;

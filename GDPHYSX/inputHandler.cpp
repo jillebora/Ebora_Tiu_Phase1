@@ -69,3 +69,5 @@ void InputHandler::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, in
 	if (s_instance)
 		s_instance->OnKey(window, key, action);
 }
+
+

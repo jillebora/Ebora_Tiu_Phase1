@@ -69,7 +69,7 @@ int main()
 	GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "Phase 1 - Ebora and Tiu", NULL, NULL);
 
 	P6::PhysicsWorld pWorld = P6::PhysicsWorld();
-	
+
 
 	if (!window)
 	{
@@ -108,7 +108,7 @@ int main()
 	// Wire shader + camera into the model's RenderObject
 	sphere.setShader(&shader.ID);
 	sphere.setCamera(&proj, &view);
-	view = BuildView(45.f, 20.f, 700.f);
+	//view = BuildView(45.f, 20.f, 700.f);
 
 	// ==============================
 	// ========= PARTICLES ==========
@@ -121,7 +121,10 @@ int main()
 	{
 		SparkParticle* spark = new SparkParticle();
 
-		spark->Spawn(glm::vec3(0.f, -350.f, 0.f));
+		float x = randomFloat(-5.f, 5.f);
+		float z = randomFloat(-5.f, 5.f);
+
+		spark->Spawn(glm::vec3(x, -350.f, z));
 
 		pWorld.AddParticle(spark);
 		sparks.push_back(spark);
@@ -168,6 +171,27 @@ int main()
 			constexpr float timestep_sec = timestep.count() / (float)1E09;
 
 			curr_ns -= timestep;
+
+			input.ProcessInput(
+				timestep_sec,
+				camYaw,
+				camPitch
+			);
+
+			if (input.IsOrtho())
+			{
+				proj = orthoProj;
+			}
+			else
+			{
+				proj = perspProj;
+			}
+
+			view = BuildView(
+				camYaw,
+				camPitch,
+				camRadius
+			);
 
 			pWorld.Update(timestep_sec);
 
