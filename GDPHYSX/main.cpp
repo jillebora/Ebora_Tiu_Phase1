@@ -27,6 +27,11 @@
 using namespace std;
 using namespace std::chrono_literals;
 
+/*
+	Creates an orbit camera around the firework using 
+	yaw, pitch, and radius values
+
+*/
 static glm::mat4 BuildView(float yaw, float pitch, float radius)
 {
 	float pitchRad = glm::radians(pitch);
@@ -45,6 +50,11 @@ static glm::mat4 BuildView(float yaw, float pitch, float radius)
 
 }
 
+/*
+	Demonstrates the particle engine by simulation a fountain style firework effect
+
+
+*/
 int main()
 {
 	srand(static_cast<unsigned int>(time(nullptr)));
@@ -81,6 +91,7 @@ int main()
 	gladLoadGL();
 	glEnable(GL_DEPTH_TEST);
 
+	// Update camera controls and projection mode.
 	InputHandler input;
 	input.Register(window);
 
@@ -100,7 +111,10 @@ int main()
 	glm::mat4 proj = orthoProj;
 	glm::mat4 view = glm::mat4(1.f);
 
-	// ---- Camera orbit state ------------------------------------------------
+	// Orbit camera state.
+	// Yaw   = horizontal rotation.
+	// Pitch = vertical rotation.
+	// Radius = distance from the firework.
 	float camYaw = 0.f;
 	float camPitch = 0.f;
 	float camRadius = 700.f;
@@ -108,7 +122,6 @@ int main()
 	// Wire shader + camera into the model's RenderObject
 	sphere.setShader(&shader.ID);
 	sphere.setCamera(&proj, &view);
-	//view = BuildView(45.f, 20.f, 700.f);
 
 	// ==============================
 	// ========= PARTICLES ==========
@@ -121,6 +134,8 @@ int main()
 	{
 		SparkParticle* spark = new SparkParticle();
 
+		// Small random offset to prevent all particles
+		// from spawning at exactly the same position.
 		float x = randomFloat(-5.f, 5.f);
 		float z = randomFloat(-5.f, 5.f);
 
@@ -193,8 +208,10 @@ int main()
 				camRadius
 			);
 
+			// Update all active particles in the physics world.
 			pWorld.Update(timestep_sec);
 
+			// Remove particles whose lifespan has expired.
 			for (auto p = sparks.begin(); p != sparks.end();)
 			{
 				if ((*p)->IsDestroyed())
@@ -214,13 +231,15 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// DRAW LIST
-
+		
+		// Render all active particles.
 		for (auto* rp : renderParticles)
 			rp->Draw();
 
 		glfwSwapBuffers(window);
 	}
 
+	// Release graphics resources and shut down GLFW.
 	sphere.destroy();
 	shader.destroy();
 

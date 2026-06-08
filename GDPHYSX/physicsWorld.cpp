@@ -19,11 +19,6 @@ void P6::PhysicsWorld::Update(float time)
 	}
 }
 
-std::list<P6::Particle*>& P6::PhysicsWorld::GetParticles()
-{
-	return Particles;
-}
-
 void P6::PhysicsWorld::UpdateParticleList()
 {
 	// Removes ALL particles in list

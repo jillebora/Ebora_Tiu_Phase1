@@ -6,24 +6,36 @@
 
 using namespace std;
 
+// Encapsulates OpenGL shader program
 class Shader
 {
 	private:
+		// Reads a shader source file and returns
 		string loadFile(const char* path) const;
+
+		// Validates shader compilation and program
 		void checkCompileErrors(GLuint shader, const string& type) const;
 
 	public:
+		// OpenGL shader program identifier.
 		GLuint ID;
 
+		// Creates an empty shader object.
 		Shader();
 
+		// Loads, compiles, and links the specified vertex and fragment shaders
 		Shader(const char* vertexPath, const char* fragmentPath);
 
+		// Destructor
 		~Shader();
 
+		// Activates this shader program for rendering.
 		void use() const;
+
+		// Returns the OpenGL shader program ID.
 		GLuint getID() const { return ID; }
 
+		// Releases the OpenGL shader program.
 		void destroy();
 
 		// Uniform setters

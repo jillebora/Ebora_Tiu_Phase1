@@ -1,8 +1,10 @@
 #include "inputHandler.h"
 #include <glm/glm.hpp>
 
+// Static pointer used by GLFW callbacks to access the active InputHandler.
 InputHandler* InputHandler::s_instance = nullptr;
 
+// Intializes all key state and default camera settings
 InputHandler::InputHandler()
 	: keyW(false), keyS(false), keyA(false), keyD(false)
 		, isOrtho(true), spacePressed(false), windowHandle(nullptr)
@@ -10,6 +12,7 @@ InputHandler::InputHandler()
 {
 }
 
+// Registers the inpput handler with GLFW window and assigns keyboard callback function
 void InputHandler::Register(GLFWwindow* window)
 {
 	windowHandle = window;
@@ -19,6 +22,14 @@ void InputHandler::Register(GLFWwindow* window)
 
 }
 
+/*
+	Processes camera movement and input states
+
+	W/S camera pitch
+	A/D camera yaw
+
+	Returns true only when the Space key is newly pressed,
+*/
 bool InputHandler::ProcessInput(float dt, float& yaw, float& pitch)
 {
 	if (keyA) yaw -= CameraSpeed * dt;
@@ -39,6 +50,11 @@ bool InputHandler::ProcessInput(float dt, float& yaw, float& pitch)
 	return toggleFired;	// toggle pause on this frame
 }
 
+// Handles GLFW Keyboard Events 
+// Tracks WASD key states
+// 1 = ortho
+// 2 = persp
+// Esc = Exit Application
 void InputHandler::OnKey(GLFWwindow* window, int key, int action)
 {
 	if (key == GLFW_KEY_W)
@@ -63,14 +79,16 @@ void InputHandler::OnKey(GLFWwindow* window, int key, int action)
 
 }
 
-
+// Static GLFW callback function
+// This function forwards keyboard events
+// to the active InputHandler instance
 void InputHandler::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (s_instance)
 		s_instance->OnKey(window, key, action);
 }
 
-
+// Returns the currently selected projection mode.
 bool InputHandler::IsOrtho() const
 {
 	return isOrtho;

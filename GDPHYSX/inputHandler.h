@@ -3,9 +3,16 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+/*
+	Handles keybaord input
+	Rensponsible for camera movement, projection switching, 
+	pause/play controls, and applciation exit
+
+*/
 class InputHandler
 {
 	public:
+		// Creates a new input handler instance.
 		InputHandler();
 
 		void Register(GLFWwindow* window);
