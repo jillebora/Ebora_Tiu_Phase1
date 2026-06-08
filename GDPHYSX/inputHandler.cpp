@@ -5,7 +5,7 @@ InputHandler* InputHandler::s_instance = nullptr;
 
 InputHandler::InputHandler()
 	: keyW(false), keyS(false), keyA(false), keyD(false)
-		, isOrtho(true), spacePressed(false), windowHandle(nullptr)
+	, isOrtho(true), spacePressed(false), windowHandle(nullptr)
 
 {
 }

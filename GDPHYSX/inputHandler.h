@@ -16,6 +16,8 @@ class InputHandler
 
 		bool IsOrtho() const;
 
+		
+
 	private:
 		//Key handler
 		void OnKey(GLFWwindow* window, int key, int action);

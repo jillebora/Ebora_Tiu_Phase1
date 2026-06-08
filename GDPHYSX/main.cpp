@@ -115,24 +115,20 @@ int main()
 	// ==============================
 
 	std::vector<SparkParticle*> sparks;
-	std::list<RenderParticle*> renderParticles;
+	std::vector<RenderParticle*> renderParticles;
 
+	// Create a pool of particles and corresponding render wrappers, but don't spawn them yet
 	for (int i = 0; i < sparkCount; i++)
 	{
 		SparkParticle* spark = new SparkParticle();
 
-		float x = randomFloat(-5.f, 5.f);
-		float z = randomFloat(-5.f, 5.f);
+		// mark as destroyed so it isn't active until we explicitly spawn it
+		spark->Destroy();
 
-		spark->Spawn(glm::vec3(x, -350.f, z));
-
-		pWorld.AddParticle(spark);
 		sparks.push_back(spark);
 
 		RenderParticle* rp = new RenderParticle(spark, sphere.getRenderObject(), spark->color);
-
 		rp->Scale = glm::vec3(spark->radius);
-
 		renderParticles.push_back(rp);
 	}
 
@@ -146,6 +142,10 @@ int main()
 	auto prev_time = curr_time;
 
 	std::chrono::nanoseconds curr_ns(0);
+
+	// spawn control: interval between spawn events (seconds)
+	float spawnInterval = 0.01f; // spawn ~100 particles per second by default
+	float spawnAccumulator = 0.f;
 
 	int currentRank = 1;
 	bool printedResults = false;
@@ -194,17 +194,41 @@ int main()
 			);
 
 			pWorld.Update(timestep_sec);
+			
 
-			for (auto p = sparks.begin(); p != sparks.end();)
+			// Timed spawner: only respawn a limited number of particles per second
+			spawnAccumulator += timestep_sec;
+			
+			while (spawnAccumulator >= spawnInterval)
 			{
-				if ((*p)->IsDestroyed())
+				spawnAccumulator -= spawnInterval;
+
+				// find a single available (destroyed) particle from the pool
+				bool spawned = false;
+				for (size_t i = 0; i < sparks.size(); ++i)
 				{
-					p = sparks.erase(p);
+					SparkParticle* sp = sparks[i];
+					if (sp->IsDestroyed())
+					{
+						float x = randomFloat(-5.f, 5.f);
+						float z = randomFloat(-5.f, 5.f);
+
+						sp->Spawn(glm::vec3(x, -350.f, z));
+						pWorld.AddParticle(sp);
+
+						if (i < renderParticles.size())
+						{
+							renderParticles[i]->Scale = glm::vec3(sp->radius);
+							renderParticles[i]->Color = sp->color;
+						}
+
+						spawned = true;
+						break; // spawn only one per loop iteration
+					}
 				}
-				else
-				{
-					++p;
-				}
+
+				if (!spawned)
+					break; // no available particles in the pool
 			}
 		}
 
