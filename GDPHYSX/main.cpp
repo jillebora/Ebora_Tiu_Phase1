@@ -128,26 +128,19 @@ int main()
 	// ==============================
 
 	std::vector<SparkParticle*> sparks;
-	std::list<RenderParticle*> renderParticles;
+	std::vector<RenderParticle*> renderParticles;
 
 	for (int i = 0; i < sparkCount; i++)
 	{
 		SparkParticle* spark = new SparkParticle();
 
-		// Small random offset to prevent all particles
-		// from spawning at exactly the same position.
-		float x = randomFloat(-5.f, 5.f);
-		float z = randomFloat(-5.f, 5.f);
+		// mark as destroyed so it isn't active until we explicitly spawn it
+		spark->Destroy();
 
-		spark->Spawn(glm::vec3(x, -350.f, z));
-
-		pWorld.AddParticle(spark);
 		sparks.push_back(spark);
 
 		RenderParticle* rp = new RenderParticle(spark, sphere.getRenderObject(), spark->color);
-
 		rp->Scale = glm::vec3(spark->radius);
-
 		renderParticles.push_back(rp);
 	}
 
@@ -162,8 +155,15 @@ int main()
 
 	std::chrono::nanoseconds curr_ns(0);
 
+	// spawn control: interval between spawn events (seconds)
+	float spawnInterval = 0.01f; 
+	float spawnAccumulator = 0.f;
+	// Pause state controlled by space toggle
+	bool paused = false;
+
 	int currentRank = 1;
 	bool printedResults = false;
+
 
 	// LOOP
 
@@ -187,11 +187,15 @@ int main()
 
 			curr_ns -= timestep;
 
-			input.ProcessInput(
+			bool toggle = input.ProcessInput(
 				timestep_sec,
 				camYaw,
 				camPitch
 			);
+			if (toggle)
+			{
+				paused = !paused;
+			}
 
 			if (input.IsOrtho())
 			{
@@ -208,22 +212,48 @@ int main()
 				camRadius
 			);
 
-			// Update all active particles in the physics world.
-			pWorld.Update(timestep_sec);
-
-			// Remove particles whose lifespan has expired.
-			for (auto p = sparks.begin(); p != sparks.end();)
+			if (!paused)
 			{
-				if ((*p)->IsDestroyed())
+				// Update all active particles in the physics world.
+				pWorld.Update(timestep_sec);
+
+				// Timed spawner: only respawn a limited number of particles per second
+				spawnAccumulator += timestep_sec;
+
+				while (spawnAccumulator >= spawnInterval)
 				{
-					p = sparks.erase(p);
-				}
-				else
-				{
-					++p;
+					spawnAccumulator -= spawnInterval;
+
+					// find a single available (destroyed) particle from the pool
+					bool spawned = false;
+					for (size_t i = 0; i < sparks.size(); ++i)
+					{
+						SparkParticle* sp = sparks[i];
+						if (sp->IsDestroyed())
+						{
+							float x = randomFloat(-5.f, 5.f);
+							float z = randomFloat(-5.f, 5.f);
+
+							sp->Spawn(glm::vec3(x, -350.f, z));
+							pWorld.AddParticle(sp);
+
+							if (i < renderParticles.size())
+							{
+								renderParticles[i]->Scale = glm::vec3(sp->radius);
+								renderParticles[i]->Color = sp->color;
+							}
+
+							spawned = true;
+							break; // spawn only one per loop iteration
+						}
+					}
+
+					if (!spawned)
+						break; // no available particles in the pool
 				}
 			}
 		}
+		
 
 
 		glfwPollEvents();
