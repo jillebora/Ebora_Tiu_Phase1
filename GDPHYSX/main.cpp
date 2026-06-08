@@ -17,17 +17,45 @@
 
 
 //#include "P6/particle.h"
+#include "P6/sparkParticle.h"
 #include "physicsWorld.h"
 #include "renderParticle.h"
 #include "shader.h"
 #include "model.h"
-#include "dragForceGenerator.h"
+#include "inputHandler.h"
 
 using namespace std;
 using namespace std::chrono_literals;
 
+static glm::mat4 BuildView(float yaw, float pitch, float radius)
+{
+	float pitchRad = glm::radians(pitch);
+	float yawRad = glm::radians(yaw);
+
+	float x = radius * cosf(pitchRad) * sinf(yawRad);
+	float y = radius * sinf(pitchRad);
+	float z = radius * cosf(pitchRad) * cosf(yawRad);
+
+	glm::vec3 eye(x, y, z);
+	glm::vec3 target(0.f);
+
+	glm::vec3 up = (fabsf(pitch) > 89.f) ? glm::vec3(0.f, 0.f, (pitch > 0.f) ? -1.f : 1.f) : glm::vec3(0.f, 1.f, 0.f);
+
+	return glm::lookAt(eye, target, up);
+
+}
+
 int main()
 {
+	srand(static_cast<unsigned int>(time(nullptr)));
+
+	int sparkCount = 1000;
+	std::cout << "P6 Fountain Firework Simulator\n";
+	std::cout << "How many sparks to simulate? ";
+	std::cin >> sparkCount;
+
+	if (sparkCount < 1)
+		sparkCount = 1;
 
 	// Initialize GLFW
 	if (!glfwInit())
@@ -35,10 +63,10 @@ int main()
 		return -1;
 	}
 
-	float windowWidth = 700;
-	float windowHeight = 700;
+	float windowWidth = 800;
+	float windowHeight = 800;
 
-	GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "PC01 Jillana Ebora", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "Phase 1 - Ebora and Tiu", NULL, NULL);
 
 	P6::PhysicsWorld pWorld = P6::PhysicsWorld();
 	
@@ -53,85 +81,59 @@ int main()
 	gladLoadGL();
 	glEnable(GL_DEPTH_TEST);
 
+	InputHandler input;
+	input.Register(window);
+
 	// SHADERS
 	Shader shader("Shaders/sphere.vert", "Shaders/sphere.frag");
 
 	// MODEL
 	Model sphere;
 	sphere.loadFromObj("3D/sphere.obj");
-	sphere.setScale(glm::vec3(10.f));
+	sphere.setScale(glm::vec3(1.f));
 
 	// CAMERA
 
-	glm::mat4 proj = glm::ortho(-350.f, 350.f, -350.f, 350.f, -500.f, 1000.f);
+	glm::mat4 orthoProj = glm::ortho(-400.f, 400.f, -400.f, 400.f, -1000.f, 1000.f);
+	glm::mat4 perspProj = glm::perspective(glm::radians(45.f), windowWidth / windowHeight, 1.f, 2000.f);
 
-	glm::mat4 view = glm::lookAt(
-		glm::vec3(0.f, 0.f, 700.f),
-		glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(0.f, 1.f, 0.f));
+	glm::mat4 proj = orthoProj;
+	glm::mat4 view = glm::mat4(1.f);;
+
+	// ---- Camera orbit state ------------------------------------------------
+	float camYaw = 0.f;
+	float camPitch = 0.f;
+	float camRadius = 700.f;
 
 	// Wire shader + camera into the model's RenderObject
 	sphere.setShader(&shader.ID);
 	sphere.setCamera(&proj, &view);
+	view = BuildView(45.f, 20.f, 700.f);
 
 	// ==============================
 	// ========= PARTICLES ==========
 	// ==============================
 
-	// RED PARTICLE
-	P6::Particle p1;
-	p1.setName("Red");
-	p1.Position = glm::vec3(-400, 200, 0);
-	p1.Velocity = P6::Particle::makeVec(80.f, p1.Position);
-	p1.Acceleration = P6::Particle::makeVec(14.5f, p1.Position);
-	pWorld.AddParticle(&p1);
+	std::vector<SparkParticle*> sparks;
+	std::list<RenderParticle*> renderParticles;
 
-	// YELLOW PARTICLE
+	for (int i = 0; i < sparkCount; i++)
+	{
+		SparkParticle* spark = new SparkParticle();
 
-	P6::Particle p2;
-	p2.setName("Yellow");
-	p2.Position = glm::vec3(-400.f, 0.f, 0);
-	p2.Velocity = P6::Particle::makeVec(110.f, p2.Position);
-	p2.Acceleration = P6::Particle::makeVec(3.f, p2.Position);
-	pWorld.AddParticle(&p2);
+		spark->Spawn(glm::vec3(0.f, -350.f, 0.f));
 
-	// GREEN PARTICLE
+		pWorld.AddParticle(spark);
+		sparks.push_back(spark);
 
-	P6::Particle p3;
-	p3.setName("Green");
-	p3.Position = glm::vec3(-400.f, -200.f, 0);
-	p3.Velocity = P6::Particle::makeVec(90.f, p3.Position);
-	p3.Acceleration = P6::Particle::makeVec(8.f, p3.Position);
-	pWorld.AddParticle(&p3);
+		RenderParticle* rp = new RenderParticle(spark, sphere.getRenderObject(), spark->color);
 
-	// DRAG
-	DragForceGenerator drag = DragForceGenerator(0.14, 0.1);
-	pWorld.forceRegistry.Add(&p1, &drag);
+		rp->Scale = glm::vec3(spark->radius);
 
-	// RENDER PARTICLE 
-	RenderParticle rp1(&p1, sphere.getRenderObject(), glm::vec3(1.f, 0.f, 0.f));
-	RenderParticle rp2(&p2, sphere.getRenderObject(), glm::vec3(1.f, 1.f, 0.f));
-	RenderParticle rp3(&p3, sphere.getRenderObject(), glm::vec3(0.f, 1.f, 0.f));
+		renderParticles.push_back(rp);
+	}
 
-	rp1.Scale = glm::vec3(5.f);
-	rp2.Scale = glm::vec3(5.f);
-	rp3.Scale = glm::vec3(5.f);
-
-	// MOVEMENT VECTOR
-
-	vector<P6::Particle*> particles;
-	particles.push_back(&p1);
-	particles.push_back(&p2);
-	particles.push_back(&p3);
-
-	// LIST
-
-	list<RenderParticle*> RenderParticles;
-	RenderParticles.push_back(&rp1);
-	RenderParticles.push_back(&rp2);
-	RenderParticles.push_back(&rp3);
-
-	// TIME
+	// ===================== TIME ======================
 
 	using clock = std::chrono::high_resolution_clock;
 
@@ -169,15 +171,15 @@ int main()
 
 			pWorld.Update(timestep_sec);
 
-			for (auto* p : pWorld.GetParticles())
+			for (auto p = sparks.begin(); p != sparks.end();)
 			{
-				// when Particle reaches center
-				if (glm::length(p->Position) <= 1.f)
-				{ 
-					if (p == &p1)
-					{
-						p1.Destroy();
-					}
+				if ((*p)->IsDestroyed())
+				{
+					p = sparks.erase(p);
+				}
+				else
+				{
+					++p;
 				}
 			}
 		}
@@ -189,7 +191,7 @@ int main()
 
 		// DRAW LIST
 
-		for (auto* rp : RenderParticles)
+		for (auto* rp : renderParticles)
 			rp->Draw();
 
 		glfwSwapBuffers(window);
