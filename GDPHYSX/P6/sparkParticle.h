@@ -56,7 +56,7 @@ class SparkParticle : public P6::Particle
 			StartPosition = origin;
 
 			// Particle random launch velocity
-			float vy = randomFloat(80.f, 120.f);
+			float vy = randomFloat(120.f, 180.f);
 			float vx = randomFloat(-1.f, 1.f) * vy * spread;
 			float vz = randomFloat(-1.f, 1.f) * vy * spread;
 			Velocity = glm::vec3(vx, vy, vz);
